@@ -1,15 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Anti-Phishing Extension",
+  "name": "Phisherman",
   "version": "1.0",
+  "description": "Basic extension that checks for phishing websites",
   "permissions": ["tabs", "webRequest"],
   "action": {
     "default_popup": "hello.html",
-    "default_icon": {
-      "16": "hello_extensions.png",
-      "48": "hello_extensions.png",
-      "128": "hello_extensions.png"
-    }
+    "default_icon": "hello_extensions.png"
   },
   "background": {
     "service_worker": "background.js"
