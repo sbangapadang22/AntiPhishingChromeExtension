@@ -1,6 +1,6 @@
 function Footer(){
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '50vh', marginTop: "-100px" }}>
           {/* Your main content goes here */}
           
           <footer className="bg-body-tertiary text-center text-lg-start mt-auto">
