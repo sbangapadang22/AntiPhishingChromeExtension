@@ -1,6 +1,6 @@
 body {
     font-family: 'Helvetica Neue Bold', sans-serif;
-    background-color: #FFFfff;
+    background-color: #FFFFFF;
     color: #000;
     transition: background-color 0.5s, color 0.5s;
     padding: 15px;
@@ -65,17 +65,19 @@ body {
     width: 20px;
     left: 2px;
     bottom: 2px;
-    background-color: #000;
+    background-color: white;
     transition: .4s;
     border-radius: 50%;
 }
 
-input:checked + .slider {
-    background-color: #0000;
+/* Active state styles */
+.slider.active {
+    background-color: #000;
 }
 
-input:checked + .slider:before {
+.slider.active:before {
     transform: translateX(16px);
+    background-color: #fff;
 }
 
 .threat-counter {
@@ -88,16 +90,10 @@ input:checked + .slider:before {
 
 .links {
     display: flex;
-    justify-content: center; /* Center links horizontally */
-    gap: 20px; /* Creates space between the links */
+    justify-content: center;
+    gap: 20px;
     font-weight: bold;
-    padding: 10px 0; /* Add some padding above and below the links */
-}
-
-.icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
+    padding: 10px 0;
 }
 
 a {

@@ -1,50 +1,65 @@
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('Anti-Phishing extension installed.');
-  });
-  
-  chrome.webNavigation.onCompleted.addListener((details) => {
-    console.log('Navigated to a new page:', details.url);
-    // Here you would put your logic to check if the page is safe
-    // For example, comparing the URL to a list of known phishing sites
-    // and then sending a message to the popup to update the UI accordingly
-  });
-  
-  chrome.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-      if(request.message === "is_phishing") {
-        let isPhishing = checkURL(request.url); // checkURL is a function you would define to check the URL
-        sendResponse({phishing: isPhishing});
-      }
-  });
-  
-  function checkURL(url) {
-    // Implement your logic to check if the URL is a known phishing attempt
-    // This could involve checking a list of malicious URLs, looking for certain patterns, etc.
-    // For demonstration purposes, let's say all URLs are safe
-    return false;
-  }
+  console.log('Anti-Phishing extension installed.');
+  // Initialize the toggle state on installation
+  chrome.storage.local.set({realtimePhishingDetectionEnabled: true});
+});
 
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    var activeTab = tabs[0];
-    var activeTabUrl = activeTab.url; // The URL of the active tab
-  
-    fetch('http://localhost:5000/evaluate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+  if (request.message === "toggle_phishing_detection") {
+      // Update the toggle state based on the message from the popup
+      chrome.storage.local.set({realtimePhishingDetectionEnabled: request.enabled});
+  } else if (request.message === "is_phishing") {
+      chrome.storage.local.get(['realtimePhishingDetectionEnabled'], async function(result) {
+          if (result.realtimePhishingDetectionEnabled) {
+              const isPhishing = await checkURL(request.url);
+              sendResponse({phishing: isPhishing});
+          }
+      });
+  }
+  return true; // indicates you wish to send a response asynchronously
+});
+
+async function checkURL(url) {
+  // Note: Replace 'YOUR_API_KEY' with your actual Safe Browsing API key
+  const apiKey = 'AIzaSyCpUd5IgDlVmf-CUUOyKARJlszlAUxXEPk';
+  const safeBrowsingUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`;
+  const requestBody = {
+      client: {
+          clientId: "phisherman",
+          clientVersion: "1.0"
       },
-      body: JSON.stringify({
-        url: activeTabUrl, // Send the URL to the Flask API
-      }),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Is phishing:', data.is_phishing);
-      // Here you can do something with the response, like sending a message to the content script to display an alert
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-  });
-  
-  
+      threatInfo: {
+          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING"],
+          platformTypes: ["ANY_PLATFORM"],
+          threatEntryTypes: ["URL"],
+          threatEntries: [{url: url}]
+      }
+  };
+
+  try {
+      const response = await fetch(safeBrowsingUrl, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(requestBody)
+      });
+      const data = await response.json();
+      return !!data.matches;
+  } catch (error) {
+      console.error('Error fetching and parsing data:', error);
+      return false;
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url) {
+      chrome.storage.local.get(['realtimePhishingDetectionEnabled'], function(result) {
+          if (result.realtimePhishingDetectionEnabled) {
+              checkURL(changeInfo.url).then(isPhishing => {
+                  if (isPhishing) {
+                      chrome.tabs.update(tabId, {url: "warning.html"});
+                  }
+              });
+          }
+      });
+  }
+});
