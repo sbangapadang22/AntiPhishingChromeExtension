@@ -3,7 +3,7 @@
   "name": "Phisherman",
   "version": "1.0",
   "description": "Basic extension that checks for phishing websites",
-  "permissions": ["tabs", "webRequest"],
+  "permissions": ["tabs", "webRequest", "http://localhost:5000/"],
   "action": {
     "default_popup": "hello.html",
     "default_icon": "hello_extensions.png"
